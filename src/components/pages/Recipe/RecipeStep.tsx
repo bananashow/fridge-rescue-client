@@ -1,17 +1,28 @@
 import { styled } from 'styled-components';
 import { BasicButton } from '../../common/BasicButton';
 import { theme } from '../../../styles/theme';
-import { type ChangeEvent } from 'react';
+import { useState, type ChangeEvent, useEffect } from 'react';
 import { FaPlus } from 'react-icons/fa6';
 import { FaTrash } from 'react-icons/fa';
-import type { Control } from 'react-hook-form';
-import { Controller } from 'react-hook-form';
+import type { FieldValues, UseFormRegister } from 'react-hook-form';
+
+export interface StepData {
+  id: number;
+  stepDescription: string;
+  stepImageUrl: string;
+  stepNo: number;
+  stepTip: string;
+}
 
 interface stepProps {
-  image: File | null;
+  image: string | File | null;
+  stepImage?: {
+    image: File | null | string;
+  }[];
+  recipeSteps?: StepData[];
   index: number;
-  control: Control;
-  handleDeleteStep: (index: number) => void;
+  register: UseFormRegister<FieldValues>;
+  handleDeleteStep: (index: number, id: number) => void;
   deleteImageStep: (index: number) => void;
   handleImageStep: (event: ChangeEvent<HTMLInputElement>, index: number) => void;
 }
@@ -19,36 +30,58 @@ interface stepProps {
 export const RecipeStep = ({
   image,
   index,
-  control,
+  register,
+  recipeSteps,
   deleteImageStep,
   handleDeleteStep,
   handleImageStep,
 }: stepProps) => {
+  const [imageUrl, setImageUrl] = useState<string | null>(typeof image === 'string' ? image : null);
+
+  useEffect(() => {
+    if (image instanceof File) {
+      setImageUrl(URL.createObjectURL(image));
+    } else if (typeof image === 'string') {
+      setImageUrl(image);
+    }
+  }, [image]);
+
+  const handleDeleteImage = () => {
+    if (typeof image === 'string') {
+      setImageUrl(null);
+    } else {
+      deleteImageStep(index);
+    }
+    setImageUrl(null);
+  };
+
   return (
     <>
       <TopWrapper>
-        {image && (
+        {imageUrl && (
           <BasicButton
             type="button"
             $bgcolor={theme.colors.grayishWhite}
             $fontcolor={theme.colors.black}
-            onClick={() => deleteImageStep(index)}
+            onClick={handleDeleteImage}
           >
             이미지 삭제
           </BasicButton>
         )}
-        {index >= 1 && <StyledTrash onClick={() => handleDeleteStep(index)} />}
+        {index >= 1 && (
+          <StyledTrash
+            onClick={() => {
+              if (recipeSteps) handleDeleteStep(index, recipeSteps[index].id);
+            }}
+          />
+        )}
       </TopWrapper>
 
       <RecipeContainer>
         <div>
-          {image ? (
+          {imageUrl ? (
             <ImageWrapper>
-              <UploadImage
-                className="uploadImg"
-                src={URL.createObjectURL(image)}
-                alt="업로드된 이미지"
-              />
+              <UploadImage className="uploadImg" src={imageUrl} alt="업로드된 이미지" />
             </ImageWrapper>
           ) : (
             <>
@@ -65,32 +98,20 @@ export const RecipeStep = ({
               />
             </>
           )}
-          <Controller
-            name={`${index}.tip`}
-            control={control}
-            defaultValue=""
-            render={({ field }) => (
-              <input
-                id={`${index}.tip`}
-                type="text"
-                placeholder="당신만의 팁은?"
-                {...field}
-              ></input>
-            )}
+          <input
+            {...register(`${index}.tip`)}
+            defaultValue={recipeSteps && recipeSteps[index]?.stepTip}
+            id={`${index}.tip`}
+            type="text"
+            placeholder="당신만의 팁은?"
           />
         </div>
-        <Controller
-          name={`${index}.content`}
-          control={control}
-          defaultValue=""
-          render={({ field }) => (
-            <Content
-              maxLength={200}
-              id={`${index}.content`}
-              placeholder="레시피의 내용을 입력해 주세요."
-              {...field}
-            ></Content>
-          )}
+        <Content
+          {...register(`${index}.content`)}
+          defaultValue={recipeSteps && recipeSteps[index]?.stepDescription}
+          maxLength={200}
+          id={`${index}.content`}
+          placeholder="레시피의 내용을 입력해 주세요."
         />
       </RecipeContainer>
     </>

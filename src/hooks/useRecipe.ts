@@ -5,17 +5,28 @@ import type { Ingredient } from '../pages/AddRecipe';
 import { useMutation } from '@tanstack/react-query';
 import { useSelectItem } from './useSelectItem';
 import { useNavigate } from 'react-router-dom';
+import type {
+  FieldValues,
+  UseFormGetValues,
+  UseFormSetValue,
+  UseFormUnregister,
+} from 'react-hook-form';
 
 interface StepImg {
-  image: File | null;
+  image: File | null | string;
 }
 
-export function useRecipe() {
+export function useRecipe(
+  getValues: UseFormGetValues<FieldValues>,
+  setValue: UseFormSetValue<FieldValues>,
+  unregister: UseFormUnregister<FieldValues>
+) {
   const navigate = useNavigate();
   const [stepImage, setStepImage] = useState<StepImg[]>([]);
   const [thumbnail, setThumbnail] = useState<File | null>(null);
   const [ingredient, setIngredient] = useState<Ingredient[]>();
-  const { addItemList, setAddItemList } = useSelectItem(); // addItemList state가 누락되어 있어 추가하였습니다.
+  const { addItemList, setAddItemList } = useSelectItem();
+  const [deleteStep, setDeleteStep] = useState<number[]>([]);
 
   useEffect(() => {
     const uniqueAddItemList = Array.from(new Set(addItemList));
@@ -85,12 +96,31 @@ export function useRecipe() {
     },
   });
 
-  const handleDeleteStep = (index: number) => {
+  const handleDeleteStep = (index: number, id: number) => {
     deleteImageStep(index);
-    setStepImage(stepImage.filter((_, idx) => idx !== index));
+
+    if (!deleteStep.includes(id)) {
+      setDeleteStep([...deleteStep, id]);
+    }
+
+    stepImage.forEach((_, i) => {
+      if (i >= index && i < stepImage.length - 1) {
+        setValue(`${i}.tip`, getValues(`${i + 1}.tip`));
+        setValue(`${i}.content`, getValues(`${i + 1}.content`));
+      }
+    });
+
+    const lastIndex = stepImage.length - 1;
+    unregister(`${lastIndex}.tip`);
+    unregister(`${lastIndex}.content`);
+
+    const newStepImage = stepImage.filter((_, idx) => idx !== index);
+    setStepImage(newStepImage);
   };
 
   return {
+    deleteStep,
+    setValue,
     stepImage,
     thumbnail,
     ingredient,
@@ -99,11 +129,11 @@ export function useRecipe() {
     deleteIngredientByName,
     onThumbnailChange,
     onThumbnailRemove,
+    setIngredient,
     handleImageStep,
     deleteImageStep,
     addRecipeMutation,
     handleDeleteStep,
-    setIngredient,
     setAddItemList,
     setStepImage,
   };

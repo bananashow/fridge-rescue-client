@@ -10,7 +10,7 @@ import { useState } from 'react';
 import { ConfirmModal } from '../components/common/ConfirmModal';
 import { type ErrorResponse, useLocation, useNavigate } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { getDetailRecipe, toggleBookmark } from '../api/recipe';
+import { deleteRecipe, getDetailRecipe, toggleBookmark } from '../api/recipe';
 import { QUERY_KEY } from '../constants/queryKey';
 import { formatDate } from '../utils/formatDate';
 import { Chip } from '@mui/material';
@@ -20,6 +20,8 @@ import { makeReport } from '../api/report';
 import { BasicInput } from '../components/common/BasicInput';
 import { type AxiosError } from 'axios';
 import { RecipeReviewList } from '../components/pages/recipe/RecipeReviewList';
+import { useRecoilValue } from 'recoil';
+import { NickNameAtom } from '../store/auth';
 
 export const RecipeView = () => {
   const navigation = useNavigate();
@@ -29,6 +31,7 @@ export const RecipeView = () => {
   const [isImageModalOpened, setImageModalOpen] = useState(false);
   const [reportModalIsOpened, setReportModalOpen] = useState(false);
   const [reportReason, setReportReason] = useState('');
+  const user = useRecoilValue(NickNameAtom);
 
   const handleImageModal = (isOpen: boolean) => {
     setImageModalOpen(isOpen);
@@ -101,6 +104,20 @@ export const RecipeView = () => {
     select: (data) => data.data,
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: deleteRecipe,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEY.GET_MY_RECIPE, recipeId] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEY.GET_LATEST_RECIPE] });
+      navigation('/mypage');
+      alert('삭제가 완료되었습니다.');
+    },
+  });
+
+  const handleDeleteRecipe = () => {
+    deleteMutation.mutate(recipeId);
+  };
+
   return (
     <>
       <RecipeViewContainer>
@@ -120,6 +137,14 @@ export const RecipeView = () => {
                   <PiCookingPotDuotone />
                   {data?.reviewCount}
                 </span>
+                {user === data?.author.nickname && (
+                  <>
+                    <UpdateBtn onClick={() => navigation(`/recipe/update/${recipeId}`)}>
+                      수정
+                    </UpdateBtn>
+                    <UpdateBtn onClick={handleDeleteRecipe}>삭제</UpdateBtn>
+                  </>
+                )}
               </span>
             </div>
             <div>
@@ -356,4 +381,8 @@ const RecipeViewContainer = styled.div`
   button {
     margin-top: 12px;
   }
+`;
+
+const UpdateBtn = styled.span`
+  cursor: pointer;
 `;

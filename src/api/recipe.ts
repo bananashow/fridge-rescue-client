@@ -1,10 +1,18 @@
+import { blob } from 'stream/consumers';
 import { END_POINTS } from '../constants/api';
 import type { Ingredient, StepImage } from '../pages/AddRecipe';
 import { axiosAuth, axiosDefault, axiosFormData } from './axiosInstance';
 
-interface AddRecipeData {
+interface Requset {
+  content: string;
+  tip: string;
   title: string;
   summary: string;
+}
+
+interface AddRecipeData {
+  title: string | Requset;
+  summary: string | Requset;
   recipeImage: File;
   steps: {
     description: string;
@@ -12,6 +20,24 @@ interface AddRecipeData {
   }[];
   ingredient: Ingredient[] | undefined;
   stepImage: StepImage[];
+}
+
+interface UpdateRecipeData {
+  recipeId: string;
+  recipeData: {
+    updateSteps: {
+      id: number;
+      stepNo: number;
+      description: string;
+      tip: string;
+    }[];
+    deleteSteps: number[];
+    recipeImage: File | null;
+    stepImages: StepImage[] | null;
+    title: string | undefined;
+    summary: string | undefined;
+    ingredient: Ingredient[] | undefined;
+  };
 }
 
 export const getNewRecipe = async () => {
@@ -58,8 +84,30 @@ export const toggleBookmark = async (recipeId: string) => {
   return result.data;
 };
 
-export const updateRecipe = async (recipeId: string, recipeData: AddRecipeData) => {
-  const { data } = await axiosFormData.post(`${END_POINTS.RECIPES}/${recipeId}`, recipeData);
+export const updateRecipe = async ({ recipeId, recipeData }: UpdateRecipeData) => {
+  const formData = new FormData();
+
+  const requestData = {
+    title: recipeData.title,
+    summary: recipeData.summary,
+    ingredients: recipeData.ingredient,
+    updateSteps: recipeData.updateSteps,
+    deleteSteps: recipeData.deleteSteps,
+  };
+
+  const requestBlob = new Blob([JSON.stringify(requestData)], { type: 'application/json' });
+
+  formData.append('request', requestBlob);
+
+  recipeData.stepImages?.forEach((item) => {
+    formData.append(`stepImages`, item.image || new Blob());
+  });
+
+  if (recipeData.recipeImage) {
+    formData.append('recipeImage', recipeData.recipeImage);
+  }
+
+  const { data } = await axiosFormData.patch(`${END_POINTS.RECIPES}/${recipeId}`, formData);
   return data;
 };
 
@@ -75,5 +123,10 @@ export const getPopularRecipes = async (size: number, page = 0) => {
 
 export const getRecipesCount = async () => {
   const result = await axiosDefault.get(`${END_POINTS.RECIPES}`);
+  return result.data;
+};
+
+export const deleteRecipe = async (recipeId: string) => {
+  const result = await axiosAuth.delete(`${END_POINTS.RECIPES}/${recipeId}`);
   return result.data;
 };

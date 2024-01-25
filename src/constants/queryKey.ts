@@ -13,6 +13,7 @@ export const QUERY_KEY = {
   UPDATE_RECIPE: 'updateRecipe',
   SEARCH_INGREIDENT: 'searchIngredient',
   NOTIFICATION: 'notification',
+  MYPAGE_NOTIC: 'mypageNotic',
   READ_NOTIC: 'readNotic',
   GET_LATEST_RECIPE: 'getLatestRecipes',
   GET_LATEST_RECIPE_INFINITE: 'getLatestRecipes_infinite',

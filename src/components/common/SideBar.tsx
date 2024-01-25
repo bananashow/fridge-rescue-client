@@ -59,26 +59,28 @@ export const SideBar = ({ handleSidebar, isOpen }: Props) => {
           </AllRead>
           {data?.map((item: NotificationData) => (
             <div key={item.id}>
-              <Wrapper>
-                <Item
-                  onClick={() =>
-                    handleRead(
-                      item.id,
-                      item.notificationType,
-                      item.notificationProperty.originId,
-                      item.checkedAt
-                    )
-                  }
-                >
-                  <Notification>
-                    <Content>{item.notificationProperty.contents}</Content>
-                    <Time>{dayjs(item.createdAt).from(now)}</Time>
-                  </Notification>
-                </Item>
-                <DeleteButtonWrapper>
-                  {item.checkedAt && <span>{dayjs(item.checkedAt).from(now)}에 읽음</span>}
-                </DeleteButtonWrapper>
-              </Wrapper>
+              {!item.checkedAt && (
+                <Wrapper>
+                  <Item
+                    onClick={() =>
+                      handleRead(
+                        item.id,
+                        item.notificationType,
+                        item.notificationProperty.originId,
+                        item.checkedAt
+                      )
+                    }
+                  >
+                    <Notification>
+                      <Content>{item.notificationProperty.contents}</Content>
+                      <Time>{dayjs(item.createdAt).from(now)}</Time>
+                    </Notification>
+                  </Item>
+                  <DeleteButtonWrapper>
+                    {item.checkedAt && <span>{dayjs(item.checkedAt).from(now)}에 읽음</span>}
+                  </DeleteButtonWrapper>
+                </Wrapper>
+              )}
             </div>
           ))}
         </NotificationList>
@@ -159,6 +161,12 @@ const Content = styled.p`
   padding-left: 10px;
   font-weight: 600;
   font-size: 17px;
+
+  width: 390px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
 
   @media ${device.mobile} {
     font-size: 13px;

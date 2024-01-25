@@ -5,15 +5,14 @@ import { theme } from '../styles/theme';
 import { useRef } from 'react';
 import { IngredientSearchForm } from '../components/pages/fridge/IngredientSearchForm';
 import { FaPlus } from 'react-icons/fa6';
-import { BasicInput } from '../components/common/BasicInput';
-import { Controller, useForm } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { RecipeStep } from '../components/pages/Recipe/RecipeStep';
 import { UsedIngrident } from '../components/pages/Recipe/UsedIngrident';
 import { useRecipe } from '../hooks/useRecipe';
 import { useNavigate } from 'react-router-dom';
 
 export interface StepImage {
-  image: File | null;
+  image: File | null | string;
 }
 
 export interface InputData {
@@ -35,6 +34,39 @@ export const AddRecipe = () => {
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const handleAddRecipe = async (data: InputData) => {
+    if (thumbnail === null) {
+      // eslint-disable-next-line no-alert
+      alert('썸네일은 필수 입니다.');
+      return;
+    }
+
+    const steps = stepImage.map((_, index) => {
+      const { content, tip } = data[index];
+
+      return {
+        description: content,
+        tip,
+      };
+    });
+
+    const finalData = {
+      title: data.title,
+      summary: data.summary,
+      recipeImage: thumbnail,
+      steps,
+      ingredient,
+      stepImage,
+    };
+
+    console.log(finalData);
+
+    addRecipeMutation.mutate(finalData);
+  };
+
+  const { register, handleSubmit, getValues, setValue, unregister } = useForm();
+  const onSubmit = handleSubmit(handleAddRecipe);
+
   const {
     stepImage,
     thumbnail,
@@ -50,39 +82,7 @@ export const AddRecipe = () => {
     handleDeleteStep,
     setAddItemList,
     setStepImage,
-  } = useRecipe();
-
-  const handleAddRecipe = async (data: InputData) => {
-    if (thumbnail === null) {
-      // eslint-disable-next-line no-alert
-      alert('썸네일은 필수 입니다.');
-      return;
-    }
-
-    const steps = stepImage.map((_, index) => {
-      const { content } = data[index];
-      const { tip } = data[index];
-
-      return {
-        description: content,
-        tip,
-      };
-    });
-
-    const finalData = {
-      title: data.title.title,
-      summary: data.summary.summary,
-      recipeImage: thumbnail,
-      steps,
-      ingredient,
-      stepImage,
-    };
-
-    addRecipeMutation.mutate(finalData);
-  };
-
-  const { control, handleSubmit } = useForm();
-  const onSubmit = handleAddRecipe;
+  } = useRecipe(getValues, setValue, unregister);
 
   return (
     <>
@@ -95,29 +95,10 @@ export const AddRecipe = () => {
         setAddItemList={setIngridentAmount}
         deleteItem={deleteIngredientByName}
       />
-      <WriteContainer onSubmit={handleSubmit(onSubmit)}>
-        <Controller
-          name="title.title"
-          control={control}
-          defaultValue=""
-          render={({ field }) => (
-            <RecipeTitle id="title.title" placeholder="레시피 제목 입력" {...field} />
-          )}
-        />
+      <WriteContainer onSubmit={onSubmit}>
+        <RecipeTitle {...register('title')} id="title" placeholder="레시피 제목 입력" />
         <Summary>
-          <Controller
-            name="summary.summary"
-            control={control}
-            defaultValue=""
-            render={({ field }) => (
-              <BasicInput
-                type="text"
-                id="summary.summary"
-                placeholder="레시피 요약 입력"
-                {...field}
-              ></BasicInput>
-            )}
-          />
+          <input {...register('summary')} type="text" id="summary" placeholder="레시피 요약 입력" />
         </Summary>
         <Thumbnail>
           {thumbnail && (
@@ -126,7 +107,12 @@ export const AddRecipe = () => {
                 type="button"
                 $bgcolor={theme.colors.grayishWhite}
                 $fontcolor={theme.colors.black}
-                onClick={onThumbnailRemove}
+                onClick={() => {
+                  if (fileInputRef.current) {
+                    fileInputRef.current.value = '';
+                  }
+                  onThumbnailRemove();
+                }}
               >
                 썸네일 삭제
               </BasicButton>
@@ -157,7 +143,7 @@ export const AddRecipe = () => {
             key={index}
             image={e.image}
             index={index}
-            control={control}
+            register={register}
             deleteImageStep={deleteImageStep}
             handleDeleteStep={handleDeleteStep}
             handleImageStep={handleImageStep}
@@ -209,17 +195,15 @@ export const RecipeTitle = styled.input`
 `;
 
 export const Summary = styled.div`
-  label {
-  }
-
   & > input {
     border: none;
     width: 100%;
     outline: none;
+    padding-left: 10px;
   }
 `;
 
-const ButtonWrapper = styled.div`
+export const ButtonWrapper = styled.div`
   display: flex;
   margin-top: 50px;
 

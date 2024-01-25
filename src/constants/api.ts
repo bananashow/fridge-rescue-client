@@ -36,7 +36,7 @@ export const END_POINTS = {
   SUGGEST: '/search/ingredient?keyword=',
   KEYWORD_SEARCH: '/search/recipe/keyword?keyword=',
   FRIGE_SEARCH: '/search/recipe/fridge',
-  SUBSCRIBE: 'subscribe',
+  SUBSCRIBE: 'notifications/subscribe',
 } as const;
 
 export const HTTP_STATUS_CODE = {} as const;

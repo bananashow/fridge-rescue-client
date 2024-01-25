@@ -23,7 +23,6 @@ export const UsedIngrident = ({ addItemList, setAddItemList, deleteItem }: Added
             <MdClose onClick={() => deleteItem(e.name)} />
           </div>
           <input
-            defaultValue={e.id && e.amount}
             value={e.amount}
             type="text"
             placeholder="재료 양"
