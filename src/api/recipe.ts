@@ -1,4 +1,3 @@
-import { blob } from 'stream/consumers';
 import { END_POINTS } from '../constants/api';
 import type { Ingredient, StepImage } from '../pages/AddRecipe';
 import { axiosAuth, axiosDefault, axiosFormData } from './axiosInstance';
@@ -48,7 +47,7 @@ export const getNewRecipe = async () => {
 };
 
 export const getDetailRecipe = async (recipeId: string) => {
-  const result = await axiosDefault.get(`${END_POINTS.RECIPES}/${recipeId}`);
+  const result = await axiosAuth.get(`${END_POINTS.RECIPES}/${recipeId}`);
   return result.data;
 };
 

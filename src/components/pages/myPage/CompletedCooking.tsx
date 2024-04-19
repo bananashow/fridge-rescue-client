@@ -44,7 +44,7 @@ export const CompletedCooking = () => {
         </CardList>
       </InfiniteScroll>
 
-      {!data && <NoRecipe>완료한 요리가 없어요!</NoRecipe>}
+      {!data?.content && <NoRecipe>완료한 요리가 없어요!</NoRecipe>}
     </>
   );
 };

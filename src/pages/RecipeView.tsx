@@ -19,9 +19,9 @@ import { ImageModal } from '../components/common/ImageModal';
 import { makeReport } from '../api/report';
 import { BasicInput } from '../components/common/BasicInput';
 import { type AxiosError } from 'axios';
-import { RecipeReviewList } from '../components/pages/recipe/RecipeReviewList';
 import { useRecoilValue } from 'recoil';
 import { NickNameAtom } from '../store/auth';
+import { RecipeReviewList } from '../components/pages/Recipe/RecipeReviewList';
 
 export const RecipeView = () => {
   const navigation = useNavigate();

@@ -46,7 +46,7 @@ export const MyRecipe = () => {
         </CardList>
       </InfiniteScroll>
 
-      {!data && <NoRecipe>내가 등록한 레시피가 없어요!</NoRecipe>}
+      {!data?.content && <NoRecipe>내가 등록한 레시피가 없어요!</NoRecipe>}
     </>
   );
 };

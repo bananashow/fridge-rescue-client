@@ -28,7 +28,7 @@ export const useNotification = ({ handleSidebar, data }: Props) => {
       }
       queryClient.invalidateQueries({ queryKey: [QUERY_KEY.NOTIFICATION] });
 
-      if (notificationType === 'INGREDIENT_EXPIRED' || notificationType === 'RECIPE_RECOMMENDED') {
+      if (notificationType === 'RECIPE_REVIEWED' || notificationType === 'RECIPE_RECOMMENDED') {
         navigate(`/recipe/${originId}`);
       } else {
         navigate(`/refrigerator`);
